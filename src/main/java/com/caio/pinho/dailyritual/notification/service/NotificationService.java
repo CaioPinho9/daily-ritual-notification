@@ -1,4 +1,4 @@
-package com.caio.pinho.dailyritual.notification.notification;
+package com.caio.pinho.dailyritual.notification.service;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -8,6 +8,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.caio.pinho.dailyritual.notification.dto.NotificationHistoryResponse;
+import com.caio.pinho.dailyritual.notification.dto.ReminderDuePayload;
+import com.caio.pinho.dailyritual.notification.model.NotificationHistory;
+import com.caio.pinho.dailyritual.notification.repository.NotificationHistoryRepository;
 
 @Service
 public class NotificationService {

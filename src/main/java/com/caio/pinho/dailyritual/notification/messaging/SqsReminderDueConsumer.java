@@ -1,13 +1,18 @@
-package com.caio.pinho.dailyritual.notification.notification;
+package com.caio.pinho.dailyritual.notification.messaging;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import com.caio.pinho.dailyritual.notification.dto.ReminderDuePayload;
+import com.caio.pinho.dailyritual.notification.service.NotificationService;
+import com.caio.pinho.dailyritual.shared.config.AppSqsProperties;
+import com.caio.pinho.dailyritual.shared.messaging.MessageConsumer;
 
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
@@ -15,7 +20,8 @@ import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 
 @Component
-public class SqsReminderDueConsumer {
+@ConditionalOnProperty(prefix = "app.messaging", name = "provider", havingValue = "sqs", matchIfMissing = true)
+public class SqsReminderDueConsumer implements MessageConsumer<String> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SqsReminderDueConsumer.class);
 	private static final Pattern JOB_ID_PATTERN = Pattern.compile("\"jobId\":(\\d+)");
@@ -30,10 +36,10 @@ public class SqsReminderDueConsumer {
 	public SqsReminderDueConsumer(
 			SqsClient sqsClient,
 			NotificationService notificationService,
-			@Value("${app.sqs.reminder-queue-url:http://localhost:4566/000000000000/reminder-due}") String queueUrl) {
+			AppSqsProperties sqsProperties) {
 		this.sqsClient = sqsClient;
 		this.notificationService = notificationService;
-		this.queueUrl = queueUrl;
+		this.queueUrl = sqsProperties.reminderQueueUrl();
 	}
 
 	@Scheduled(fixedDelay = 5000)
@@ -41,7 +47,8 @@ public class SqsReminderDueConsumer {
 		try {
 			for (Message message : sqsClient.receiveMessage(
 					ReceiveMessageRequest.builder().queueUrl(queueUrl).maxNumberOfMessages(10).waitTimeSeconds(1).build()).messages()) {
-				process(message);
+				consume(message.body());
+				sqsClient.deleteMessage(DeleteMessageRequest.builder().queueUrl(queueUrl).receiptHandle(message.receiptHandle()).build());
 			}
 		}
 		catch (Exception exception) {
@@ -49,15 +56,14 @@ public class SqsReminderDueConsumer {
 		}
 	}
 
-	private void process(Message message) {
+	@Override
+	public void consume(String body) {
 		try {
-			String body = message.body();
 			notificationService.handleReminderDue(new ReminderDuePayload(
 					Long.parseLong(extract(JOB_ID_PATTERN, body)),
 					Long.parseLong(extract(USER_ID_PATTERN, body)),
 					Long.parseLong(extract(PLAN_ID_PATTERN, body)),
 					extract(TITLE_PATTERN, body)));
-			sqsClient.deleteMessage(DeleteMessageRequest.builder().queueUrl(queueUrl).receiptHandle(message.receiptHandle()).build());
 		}
 		catch (IllegalArgumentException exception) {
 			LOGGER.warn("Invalid ReminderDue message", exception);

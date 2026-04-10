@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import com.caio.pinho.dailyritual.notification.dto.ReminderDuePayload;
+import com.caio.pinho.dailyritual.notification.service.NotificationService;
+
 @SpringBootTest
 @ActiveProfiles("test")
 class NotificationServiceTest {

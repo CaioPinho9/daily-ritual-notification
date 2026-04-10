@@ -1,4 +1,4 @@
-package com.caio.pinho.dailyritual.notification.notification;
+package com.caio.pinho.dailyritual.notification.model;
 
 import java.time.LocalDateTime;
 

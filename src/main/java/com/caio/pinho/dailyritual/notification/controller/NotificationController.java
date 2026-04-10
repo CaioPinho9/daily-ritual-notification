@@ -1,4 +1,4 @@
-package com.caio.pinho.dailyritual.notification.notification;
+package com.caio.pinho.dailyritual.notification.controller;
 
 import java.util.List;
 
@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.caio.pinho.dailyritual.notification.dto.NotificationHistoryResponse;
+import com.caio.pinho.dailyritual.notification.service.NotificationService;
 import com.caio.pinho.dailyritual.shared.security.AuthenticatedUser;
 
 @RestController

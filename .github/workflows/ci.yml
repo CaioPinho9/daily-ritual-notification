@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Service
+        uses: actions/checkout@v4
+
+      - name: Checkout Shared Library
+        uses: actions/checkout@v4
+        with:
+          repository: CaioPinho9/daily-ritual-lib
+          path: daily-ritual-lib
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Install Shared Library
+        working-directory: daily-ritual-lib
+        run: mvn -B install -DskipTests
+
+      - name: Run tests
+        run: mvn -B test
